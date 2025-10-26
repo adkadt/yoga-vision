@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 
 const enableExercise = async ({searchParams}) => {
     const { exercises } = await searchParams;
@@ -9,8 +10,10 @@ const enableExercise = async ({searchParams}) => {
         body: JSON.stringify({ exercises: selectedExercises })
     });
 
-    // const data = await res.json();
-    // console.log(data);
+    const data = await res.json();
+    console.log(data);
+
+    redirect('../video2');
 }
 
 export default enableExercise;

@@ -84,7 +84,7 @@ def continuous_processing_loop():
     #while not saved_results.pose_landmarks:
     #    saved_results = get_saved_pose('t_pose.jpg')
 
-
+    scores = np.array([])
     cal_done_time = time.time()
     
     print("🔄 Starting continuous pose processing loop...")
@@ -254,6 +254,7 @@ def continuous_processing_loop():
                     cal_done_time = time.time()
                     pose_loaded = True
                 if status == 2:
+                    scores = np.append(scores, accuracy)
                     if accuracy < 80:
                         cal_done_time = time.time()
                     elif time.time() - cal_done_time >= 10:
@@ -263,6 +264,12 @@ def continuous_processing_loop():
                         (str(3), exercise_id)
                         )
                         connection.commit()
+                        cursor.execute(
+                            "UPDATE excercises SET score = %s WHERE id = %s",
+                        (str(np.mean(scores)), exercise_id)
+                        )
+                        connection.commit()
+                        scores = np.array([])
                         time.sleep(2)
                         pose_loaded = False
 
