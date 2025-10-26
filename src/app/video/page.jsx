@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { io } from 'socket.io-client';
 
 export default function VideoProcessor() {
@@ -14,6 +15,7 @@ export default function VideoProcessor() {
   const lastFrameTime = useRef(Date.now());
   const frameCount = useRef(0);
 
+  const router = useRouter();
   useEffect(() => {
     startCamera();
     connectWebSocket();
@@ -122,7 +124,24 @@ export default function VideoProcessor() {
 
     const interval = setInterval(() => {
       captureAndSendFrame();
-    }, 33); // ~30 FPS
+
+
+    const checkFinish = async () => {
+      const res = await fetch('http://yogavision.abrandt.xyz/api/updateExercises', {
+        method: 'GET',
+        headers: {'Content-Type': 'application/json'},
+      });
+      const data = await res.json();
+      console.log(data);
+
+      if (data.find(items => items.status === 1) && data.find(items => items.status === 2))
+        return;
+      else {
+        router.push(`../scoreboard?exercises=${data[exercises]}scores=${data[scores]}`);
+      }
+      
+    }
+  }, 33); // ~30 FPS
 
     return () => clearInterval(interval);
   }, [cameraReady, connected]);
@@ -217,3 +236,4 @@ export default function VideoProcessor() {
     </div>
   );
 }
+
