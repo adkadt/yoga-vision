@@ -77,6 +77,7 @@ def continuous_processing_loop():
     y_offsets = np.array([])
     scales = np.array([])
 
+    posefile = 't_pose.jpg'
     saved_results = get_saved_pose('t_pose.jpg')
 
     global processing_active, client_sid
@@ -101,7 +102,7 @@ def continuous_processing_loop():
             cursor = connection.cursor(dictionary=True, buffered=True)
             cursor.execute("SELECT * FROM exercises WHERE status IN (1, 3)")
             table_rows = cursor.fetchall()
-            if len(table_rows) == 1:
+            if len(table_rows) >= 1:
                 # print(table_rows)
                 exercise_id = table_rows[0]['id']
                 exercise = table_rows[0]['exercise']
@@ -112,12 +113,7 @@ def continuous_processing_loop():
                     print("More than 1 exercise of status 1")
             cursor.close()
 
-
-
-
-
-
-
+            posefile = f'{exercise}_pose.jpg'
 
             # Wait for a frame from the queue
             frame_data = frame_queue.get(timeout=1.0)
@@ -152,7 +148,7 @@ def continuous_processing_loop():
             
             # calibration
             if status == 1:
-                saved_results = get_saved_pose('t_pose.jpg')
+                saved_results = get_saved_pose(posefile)
             
             # Draw SAVED pose landmarks (in RED) with offset and scale
             if saved_results and saved_results.pose_landmarks:
@@ -206,25 +202,25 @@ def continuous_processing_loop():
                 
                 # Calculate similarity
                 accuracy = posefunctions.calculate_pose_similarity_wo_face(adjusted_pose, live_results.pose_landmarks)
-                if status == 1 and accuracy < 90 and live_results.pose_landmarks:
-                    temp_x, temp_y, temp_scale = posefunctions.calculate_alignment(adjusted_pose, live_results.pose_landmarks)
+                #if status == 1 and accuracy < 90 and live_results.pose_landmarks:
+                   # temp_x, temp_y, temp_scale = posefunctions.calculate_alignment(adjusted_pose, live_results.pose_landmarks)
                     
-                    x_offsets = np.append(x_offsets, temp_x)
-                    y_offsets = np.append(y_offsets, temp_y)
-                    scales = np.append(scales, temp_scale)
+                   # x_offsets = np.append(x_offsets, temp_x)
+                   # y_offsets = np.append(y_offsets, temp_y)
+                   # scales = np.append(scales, temp_scale)
 
-                    if num_frames % 10 == 0:
-                        offset_x = np.mean(x_offsets)
-                        offset_y = np.mean(y_offsets)
-                        scale = np.mean(scales)
+                   # if num_frames % 10 == 0:
+                   #     offset_x = np.mean(x_offsets)
+                   #     offset_y = np.mean(y_offsets)
+                   #     scale = np.mean(scales)
 
-                        x_offsets = np.array([])
-                        y_offsets = np.array([])
-                        scales = np.array([])
-                elif accuracy >= 80:
+                    #    x_offsets = np.array([])
+                     #   y_offsets = np.array([])
+                      #  scales = np.array([])
+                if accuracy >= 80 and status == 2:
                     cursor.execute(
                         "UPDATE exercises SET status = %s WHERE id = %s",
-                        (2, exercise_id)
+                        (str(2), exercise_id)
                     )
                     connection.commit()
                     
