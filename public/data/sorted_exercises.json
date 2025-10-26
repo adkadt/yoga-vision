@@ -1,0 +1,68 @@
+{
+    "Yoga": [
+        {
+            "exercise": "Downward Dog",
+            "difficulty": "Beginner"
+        },
+        {
+            "exercise": "Tree Pose",
+            "difficulty": "Beginner"
+        },
+        {
+            "exercise": "Sun Salutation",
+            "difficulty": "Intermediate"
+        },
+        {
+            "exercise": "Warrior II",
+            "difficulty": "Intermediate"
+        },
+        {
+            "exercise": "Bridge Pose",
+            "difficulty": "Intermediate"
+        }
+    ],
+    "Pilates": [
+        {
+            "exercise": "Kegel",
+            "difficulty": "Beginner"
+        },
+        {
+            "exercise": "Hundred",
+            "difficulty": "Intermediate"
+        },
+        {
+            "exercise": "Leg Circles",
+            "difficulty": "Intermediate"
+        },
+        {
+            "exercise": "Teaser",
+            "difficulty": "Advanced"
+        }
+    ],
+    "Workout": [
+        {
+            "exercise": "Push Up",
+            "difficulty": "Beginner"
+        },
+        {
+            "exercise": "Sit Up",
+            "difficulty": "Beginner"
+        },
+        {
+            "exercise": "Squat",
+            "difficulty": "Beginner"
+        },
+        {
+            "exercise": "Plank",
+            "difficulty": "Intermediate"
+        },
+        {
+            "exercise": "Pull Up",
+            "difficulty": "Advanced"
+        },
+        {
+            "exercise": "Burpee",
+            "difficulty": "Advanced"
+        }
+    ]
+}
