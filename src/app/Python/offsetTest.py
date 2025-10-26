@@ -4,6 +4,8 @@ import numpy as np
 import math
 import os
 
+import posefunctions
+
 module_path = os.path.abspath(__file__)
 module_directory = os.path.dirname(module_path)
 print(module_directory)
@@ -65,38 +67,6 @@ scale = 1.0
 move_step = 0.01  # Movement step (as fraction of image size)
 scale_step = 0.05  # Scale step
 
-def calculate_pose_similarity(landmarks1, landmarks2):
-    """
-    Calculate similarity between two poses based on landmark distances.
-    Returns a score from 0-100, where 100 is a perfect match.
-    """
-    if landmarks1 is None or landmarks2 is None:
-        return 0.0
-    
-    total_distance = 0.0
-    num_landmarks = len(landmarks1.landmark)
-    
-    for i in range(num_landmarks):
-        lm1 = landmarks1.landmark[i]
-        lm2 = landmarks2.landmark[i]
-        
-        # Calculate Euclidean distance between corresponding landmarks
-        distance = math.sqrt(
-            (lm1.x - lm2.x) ** 2 + 
-            (lm1.y - lm2.y) ** 2 + 
-            (lm1.z - lm2.z) ** 2
-        )
-        total_distance += distance
-    
-    # Average distance per landmark
-    avg_distance = total_distance / num_landmarks
-    
-    # Convert to similarity score (0-100)
-    # Assuming max reasonable distance is 1.0 (full diagonal of normalized space)
-    similarity = max(0, 100 - (avg_distance * 100))
-    
-    return similarity
-
 while True:
     # Capture frame-by-frame
     ret, frame = cap.read()
@@ -114,7 +84,7 @@ while True:
     # Create display frame
     display_frame = frame.copy()
     
-    # Draw SAVED pose landmarks on the live frame (in BLUE) with offset and scale
+    # Draw SAVED pose landmarks on the live frame (in RED) with offset and scale
     if saved_results.pose_landmarks:
         # Create a copy of landmarks with offset and scale applied
         adjusted_landmarks = mp_pose.PoseLandmark
@@ -137,8 +107,8 @@ while True:
             display_frame,
             adjusted_pose,
             mp_pose.POSE_CONNECTIONS,
-            mp_drawing.DrawingSpec(color=(255, 0, 0), thickness=2, circle_radius=2),
-            mp_drawing.DrawingSpec(color=(255, 0, 0), thickness=2, circle_radius=2)
+            mp_drawing.DrawingSpec(color=(0, 0, 255), thickness=2, circle_radius=2),
+            mp_drawing.DrawingSpec(color=(0, 0, 255), thickness=2, circle_radius=2)
         )
     
     # Draw LIVE pose landmarks on the live frame (in GREEN)
@@ -167,18 +137,23 @@ while True:
         adjusted_pose.landmark.extend(landmark_list)
         
         # Calculate similarity
-        accuracy = calculate_pose_similarity(adjusted_pose, live_results.pose_landmarks)
+        # accuracy = calculate_pose_similarity(adjusted_pose, live_results.pose_landmarks)
+        offset_x1, offset_y1, scale1 = posefunctions.calculate_alignment(adjusted_pose, live_results.pose_landmarks)
         
-        # Display accuracy score with color coding
-        if accuracy >= 80:
-            color = (0, 255, 0)  # Green for good match
-        elif accuracy >= 60:
-            color = (0, 255, 255)  # Yellow for moderate match
-        else:
-            color = (0, 0, 255)  # Red for poor match
+        # # Display accuracy score with color coding
+        # if accuracy >= 80:
+        #     color = (0, 255, 0)  # Green for good match
+        # elif accuracy >= 60:
+        #     color = (0, 255, 255)  # Yellow for moderate match
+        # else:
+        #     color = (0, 0, 255)  # Red for poor match
         
-        cv2.putText(display_frame, f"Match: {accuracy:.1f}%", (10, 30), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 1.0, color, 3)
+        cv2.putText(display_frame, f"X Offset: {offset_x1:.1f}%", (10, 30), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+        cv2.putText(display_frame, f"Y Offset: {offset_x1:.1f}%", (10, 60), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+        cv2.putText(display_frame, f"Scale: {scale1:.1f}%", (10, 90), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
     
     # Display the live feed with overlays
     cv2.imshow('Live Feed - Comparing Poses (Press Q to Quit)', display_frame)
