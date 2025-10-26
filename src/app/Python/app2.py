@@ -22,6 +22,10 @@ frame_queue = queue.Queue(maxsize=2)
 processing_active = True
 client_sid = None
 
+# Global pose adjustment variables
+offset_x = 0.0
+offset_y = 0.0
+scale = 1.0
 
 # Execute query
 # cursor.execute("SELECT * FROM exercises")
@@ -67,15 +71,11 @@ def continuous_processing_loop():
     Main processing loop that runs continuously.
     Waits for frames from the queue and processes them with MediaPipe.
     """
+    global processing_active, client_sid, offset_x, offset_y, scale
 
-    # Offset and scale for saved pose overlay
-    offset_x = 0.0
-    offset_y = 0.0
-    scale = 1.0
-
-    #x_offsets = np.array([])
-    #y_offsets = np.array([])
-    #scales = np.array([])
+    x_offsets = np.array([])
+    y_offsets = np.array([])
+    scales = np.array([])
 
     posefile = 't_pose.jpg'
     saved_results = get_saved_pose('t_pose.jpg')
@@ -86,8 +86,6 @@ def continuous_processing_loop():
 
 
     cal_done_time = time.time()
-
-    global processing_active, client_sid
     
     print("🔄 Starting continuous pose processing loop...")
     num_frames = -1
@@ -231,7 +229,21 @@ def continuous_processing_loop():
                 
                 # Calculate similarity
                 accuracy = posefunctions.calculate_pose_similarity_wo_face(adjusted_pose, live_results.pose_landmarks)
+                #if status == 1 and accuracy < 90 and live_results.pose_landmarks:
+                   # temp_x, temp_y, temp_scale = posefunctions.calculate_alignment(adjusted_pose, live_results.pose_landmarks)
+                    
+                   # x_offsets = np.append(x_offsets, temp_x)
+                   # y_offsets = np.append(y_offsets, temp_y)
+                   # scales = np.append(scales, temp_scale)
 
+                   # if num_frames % 10 == 0:
+                   #     offset_x = np.mean(x_offsets)
+                   #     offset_y = np.mean(y_offsets)
+                   #     scale = np.mean(scales)
+
+                    #    x_offsets = np.array([])
+                     #   y_offsets = np.array([])
+                      #  scales = np.array([])
                 if accuracy >= 80 and status == 1:
                     print("status update: 2")
                     cursor.execute(
@@ -264,8 +276,8 @@ def continuous_processing_loop():
                 else:
                     color = (0, 0, 255)  # Red
                 
-                cv2.putText(display_frame, f"Match: {accuracy:.1f}%", (10, 30),
-                           cv2.FONT_HERSHEY_SIMPLEX, 1.0, color, 3)
+                cv2.putText(display_frame, f"{exercise}: {accuracy:.1f}%", (10, 30),
+                           cv2.FONT_HERSHEY_SIMPLEX, 1.0, color, 2)
             
             num_frames += 1
             if num_frames > 99:
@@ -342,6 +354,7 @@ def handle_adjust_pose(data):
         offset_y = 0.0
         scale = 1.0
     
+    print(f"Pose adjusted - X: {offset_x:.3f}, Y: {offset_y:.3f}, Scale: {scale:.2f}")
     emit('pose_adjusted', {'offset_x': offset_x, 'offset_y': offset_y, 'scale': scale})
 
 @socketio.on('connect')
