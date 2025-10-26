@@ -80,6 +80,10 @@ def continuous_processing_loop():
     posefile = 't_pose.jpg'
     saved_results = get_saved_pose('t_pose.jpg')
     pose_loaded = False
+    
+    #while not saved_results.pose_landmarks:
+    #    saved_results = get_saved_pose('t_pose.jpg')
+
 
     cal_done_time = time.time()
 
@@ -129,10 +133,15 @@ def continuous_processing_loop():
 
 
             posefile = f'{exercise}_pose.jpg'
-            print(f"status: {status}, excercise:{exercise}, file:{posefile}")
+            
+            if num_frames % 30 == 0:
+                print(f"status: {status}, excercise:{exercise}, file:{posefile}")
 
             if not pose_loaded:
                 saved_results = get_saved_pose(posefile)
+                while not saved_results.pose_landmarks:
+                    print("Searching for Pose")
+                    saved_results = get_saved_pose(posefile)
                 pose_loaded = True
 
             # Wait for a frame from the queue
@@ -245,8 +254,9 @@ def continuous_processing_loop():
                     )
                     connection.commit()
                     cal_done_time = time.time()
+                    pose_loaded = True
                 if status == 2:
-                    if accuracy < 90:
+                    if accuracy < 80:
                         cal_done_time = time.time()
                     elif time.time() - cal_done_time >= 10:
                         print("status update: 3")
@@ -256,6 +266,7 @@ def continuous_processing_loop():
                         )
                         connection.commit()
                         time.sleep(2)
+                        pose_loaded = False
 
 
 
