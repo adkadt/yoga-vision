@@ -79,6 +79,9 @@ def continuous_processing_loop():
 
     posefile = 't_pose.jpg'
     saved_results = get_saved_pose('t_pose.jpg')
+    pose_loaded = False
+
+    cal_done_time = time.time()
 
     global processing_active, client_sid
     
@@ -100,20 +103,37 @@ def continuous_processing_loop():
                 # num_frames = 0s
 
             cursor = connection.cursor(dictionary=True, buffered=True)
-            cursor.execute("SELECT * FROM exercises WHERE status IN (1, 3)")
-            table_rows = cursor.fetchall()
-            if len(table_rows) >= 1:
+            cursor.execute("SELECT * FROM exercises WHERE status IN (1)")
+            stat1_rows = cursor.fetchall()
+            if len(stat1_rows) >= 1:
                 # print(table_rows)
-                exercise_id = table_rows[0]['id']
-                exercise = table_rows[0]['exercise']
-                category = table_rows[0]['category']
-                status = table_rows[0]['status']
+                exercise_id = stat1_rows[0]['id']
+                exercise = stat1_rows[0]['exercise']
+                category = stat1_rows[0]['category']
+                status = stat1_rows[0]['status']
                 # print(status)
-                if len(table_rows) > 1:
+                #if len(stat1_rows) > 1:
+                #    print("More than 1 exercise of status 1")
+            
+            cursor.execute("SELECT * FROM exercises WHERE status IN (2)")
+            stat2_rows = cursor.fetchall()
+            if len(stat2_rows) >= 1:
+                # print(table_rows)
+                exercise_id = stat2_rows[0]['id']
+                exercise = stat2_rows[0]['exercise']
+                category = stat2_rows[0]['category']
+                status = stat2_rows[0]['status']
+                # print(status)
+                if len(stat2_rows) > 1:
                     print("More than 1 exercise of status 1")
-            cursor.close()
+
 
             posefile = f'{exercise}_pose.jpg'
+            print(f"status: {status}, excercise:{exercise}, file:{posefile}")
+
+            if not pose_loaded:
+                saved_results = get_saved_pose(posefile)
+                pose_loaded = True
 
             # Wait for a frame from the queue
             frame_data = frame_queue.get(timeout=1.0)
@@ -217,13 +237,27 @@ def continuous_processing_loop():
                     #    x_offsets = np.array([])
                      #   y_offsets = np.array([])
                       #  scales = np.array([])
-                if accuracy >= 80 and status == 2:
+                if accuracy >= 80 and status == 1:
+                    print("status update: 2")
                     cursor.execute(
                         "UPDATE exercises SET status = %s WHERE id = %s",
                         (str(2), exercise_id)
                     )
                     connection.commit()
-                    
+                    cal_done_time = time.time()
+                if status == 2:
+                    if accuracy < 90:
+                        cal_done_time = time.time()
+                    elif time.time() - cal_done_time >= 10:
+                        print("status update: 3")
+                        cursor.execute(
+                            "UPDATE exercises SET status = %s WHERE id = %s",
+                        (str(3), exercise_id)
+                        )
+                        connection.commit()
+                        time.sleep(2)
+
+
 
                 # Display accuracy with color coding
                 if accuracy >= 80:
@@ -239,6 +273,7 @@ def continuous_processing_loop():
             num_frames += 1
             if num_frames > 99:
                 num_frames = 0
+            cursor.close()
             # ====================================
             # END PROCESSING
             # ====================================
