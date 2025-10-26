@@ -135,6 +135,8 @@ def continuous_processing_loop():
                 print("⚠️ Failed to decode image")
                 continue
             
+            
+
             # ====================================
             # MEDIAPIPE POSE PROCESSING
             # ====================================
