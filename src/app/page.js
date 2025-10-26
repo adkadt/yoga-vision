@@ -1,12 +1,16 @@
 'use client';
 import { useState } from 'react';
-
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const [exerciseList, setExerciseList] = useState([]);
   const [exercisePage, setExercisePage] = useState(0);
-  const [chosenExercises, setChosenExercise] = useState([]);
-  const [isClicked, setIsClicked] = useState(false);
+  const [chosenExercises, setChosenExercises] = useState([]);
+  const [counter, setCounter] = useState(0);
+  const [isClicked, setIsClicked] = useState([]);
+  const [hovered, setHovered] = useState(false);
+
+  const router = useRouter();
 
   const filterExercises = async (category) => {
     const response = await fetch('./data/sorted_exercises.json');
@@ -26,8 +30,16 @@ export default function Home() {
     }
   }
 
-  const handleClick = () => {
-    setIsClicked(true);
+  const addExercise = (newExercise, index) => {
+    if (!chosenExercises.includes(newExercise)) {
+      chosenExercises.push(newExercise);
+      isClicked.push(index);
+      console.log(chosenExercises);
+    }
+  }
+
+  const getStarted = () => {
+    router.push(`/api?exercises=${chosenExercises}`);
   }
 
 
@@ -62,12 +74,23 @@ export default function Home() {
                 CHOOSE YOUR EXERCISE
                 <div className="mt-5 text-black font-bold flex flex-col">
                   {exerciseList.map((line, index) => (
-                    <button
-                    key={index}
-                    className="w-50 px-3 py-3 mb-7 bg-white border-2 rounded-md hover:cursor-pointer hover:bg-blue-500 hover:text-white transition delay-50 ease-in-out">
-                    {line}
-                    </button>
+                      <button
+                      onClick={() => addExercise(line, index)}
+                      onMouseEnter={() => setHovered(true)}
+                      onMouseLeave={() => setHovered(false)}  
+                      key={index}
+                      className={
+                        isClicked.includes(index)
+                        ? "w-50 px-3 py-3 mb-7 border-2 rounded-md hover:cursor-pointer bg-blue-500 text-white"
+                        : "w-50 px-3 py-3 mb-7 bg-white border-2 rounded-md hover:cursor-pointer hover:bg-blue-500 hover:text-white transition delay-50 ease-in-out"
+                      }>
+                      {line}
+                      </button>
                   ))}
+
+                  <button 
+                  onClick={() => getStarted()}
+                  className='hover:cursor-pointer hover:bg-purple-500 bg-amber-500 rounded-md w-50 p-5 text-white transition delay-50 ease-in-out'>Get Started</button>
                 </div>
               </h4>
             )
@@ -91,7 +114,8 @@ export default function Home() {
                   <button 
                   onClick={() => {
                     filterExercises('Workout');
-                    setExercisePage(1);  }}
+                    setExercisePage(1);  
+                  }}
                   className="w-50 px-3 py-3 mb-7 bg-white border-2 rounded-md hover:cursor-pointer hover:bg-blue-500 hover:text-white transition delay-50 ease-in-out">WORKOUT</button>
                 </div>
               </h4> 
